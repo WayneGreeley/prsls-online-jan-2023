@@ -249,7 +249,7 @@ Since we don't have another project that manages these shared resources in the r
 ```yml
 - Effect: Allow
   Action: kms:Decrypt
-  Resource: ${ssm:/{self:service}/${sls:stage}/kmsArn}
+  Resource: ${ssm:/${self:service}/${sls:stage}/kmsArn}
 ```
 
 This special syntax `${ssm:...}` is how we can reference parameters in SSM directly in our `serverless.yml`. It's useful for referencing things like this, but again, since the SSM parameter values are fetched at deployment time and baked into the generated CloudFormation template, you shouldn't load any secrets this way.
