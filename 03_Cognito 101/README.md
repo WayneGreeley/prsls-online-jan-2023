@@ -11,112 +11,87 @@ Don't worry, we'll do this properly using Infrastrcture-as-Code (Iac) in a minut
 
 1. Go to the Cognito console
 
-2. Click `Create a user pool`
+2. Click `Create user pool`
 
-3. Use the name `workshop-` followed by your name, e.g. `workshop-yancui`
+3. Under the question `Cognito user pool sign-in options`, tick `Email`
 
 ![](/images/mod05-001.png)
 
-4. Click `Step through settings`
+4. Click `Next`
 
-5. Tick `Also allow sign in with verified email address`, `family name` and `given name`
+5. Leave `Password policy mode` on the default `Cognito default`
 
 ![](/images/mod05-002.png)
 
-6. Click `Next step`
-
-7. Accept all the default settings in the next screen
+6. Under `Multi-factor authentication`, choose `No MFA`. You should configure MFA for production, but it'll make our life more difficult at this point, so for the purpose of this workshop, let's skip it.
 
 ![](/images/mod05-003.png)
 
-8. Click `Next step`
+7. Accept the default settings for `User account recovery`.
+
+8. Click `Next`
 
 9. Accept all the default settings in the next screen
 
 ![](/images/mod05-004.png)
 
-10. Click `Next step`
+10. Click `Next`
 
-11. Accept all the default settings in the next screen
+11. Change `Email provider` to `Send email with Cognito`. In practice, you should use SES instead. But for that to work, you should set up an SES domain first. For the purpose of this workshop, we'll ask Cognito to send emails and live with the 50 emails per day limitation.
 
 ![](/images/mod05-005.png)
 
-12. Click `Next step`
+12. Click `Next`
 
-13. Ignore tags, and click `Next step`
-
-14. Choose `No` to remember user devices
-
-![](/images/mod05-006.png)
-
-15. Click `Next step`
+13. Under `User pool name`, enter something, e.g. `prsls-test`
 
 </p></details>
 
 <details>
 <summary><b>Add client for web</b></summary><p>
 
+To interact with the Cognito User Pool, we also need to create an app client. You can create separate app clients for the frontend and the backend.
+
+For now, we will only create an app client for the web client.
+
+1. Under the `Initial app client`, name the app client `web`.
+
+![](/images/mod05-006.png)
+
+2. Leave everything else as they are, but take a moment to look at the options under `Advanced app client settings` to understand what defaults Cognito has selected for us.
+
 ![](/images/mod05-007.png)
 
-1. Click `Add an app client`
-
-2. Name the app client `web`
-
-3. Untick `Generate client secret`.
-
-![](/images/mod05-008.png)
-
-4. Remove the permission for Writable Attributes for `Address` and `Profile`
-
-![](/images/mod05-009.png)
-
-5. Click `Create app client`
-
-</p></details>
-
-<details>
-<summary><b>Add client for server</b></summary><p>
-
-1. Click `Add an app client`
-
-2. Name the app client `server`
-
-3. Untick `Generate client secret`.
-
-4. Tick `Enable username password auth for admin APIs for authentication (ALLOW_ADMIN_USER_PASSWORD_AUTH)`
-
-5. Leave all the permissions as is
-
-6. Click `Create app client`
+3. Click `Next`
 
 </p></details>
 
 <details>
 <summary><b>Complete the creation process</b></summary><p>
 
-1. Click `Next step`
+1. Review the settings
 
-2. Leave all the workflow customizations
+![](/images/mod05-008.png)
 
-3. Click `Next step`
+2. Click `Create user pool`
 
-4. Review the settings
+3. Note the `User pool ID`, you would need to know where to find this when you need to configure a frontend application to talk to Cognito.
+
+![](/images/mod05-009.png)
+
+4. You would also need to know where to find the app client ID. Under the `App integration` tab
+
+![](/images/mod05-010.png)
+
+it's all the way down at the bottom
 
 ![](/images/mod05-011.png)
-
-5. Click `Create pool`
-
-6. Note the `Pool Id`, and the app client IDs for both `web` and `server`
-
-![](/images/mod05-012.png)
-
-![](/images/mod05-013.png)
 
 </p></details>
 
 **Goal:** Set up a new Cognito User Pool with CloudFormation
 
-Ok, now that you've seen how to do it by hand, let's translate what we've done to CloudFormation.
+Ok, now that you've seen how to do it by hand and have glimpsed the things that Cognito can do for you, let's translate what we've done to CloudFormation.
 
 <details>
 <summary><b>Add a new Cognito User Pool resource</b></summary><p>
@@ -293,8 +268,6 @@ Outputs:
 <summary><b>Deploy the project</b></summary><p>
 
 1. Run `npx sls deploy` to deploy the new resources. After the deployment finishes, you should see the new Cognito User Pool that you added via CloudFormation.
-
-![](/images/mod05-014.png)
 
 2. Now that we don't need it anymore, delete the Cognito User Pool that you created by hand. Feel free to compare the two side-by-side before you do, functionally they are equivalent for the purpose of this demo.
 

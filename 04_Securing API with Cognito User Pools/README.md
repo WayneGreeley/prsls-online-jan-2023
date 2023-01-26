@@ -149,6 +149,8 @@ and see the response
 }
 ```
 
+(it might take a few tries, but the change should kick in after a minute or so)
+
 This is because the `POST /restaurants/search` endpoint is now an authenticated endpoint. To call it, the user needs to first sign in to the Cognito User Pool we created earlier, obtain an authentication token and include the token in the HTTP request.
 
 </p></details>

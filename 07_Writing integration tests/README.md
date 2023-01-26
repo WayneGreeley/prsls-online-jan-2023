@@ -282,133 +282,37 @@ So that we will run the initialization logic before test case.
 
 `npm run test`
 
-and see that the test still fails! This time with a different error.
+and see that the test passes.
 
 ```
- FAIL  tests/test_cases/get-index.tests.js
-  When we invoke the GET / endpoint
-    ✕ Should return the index page with 8 restaurants (41 ms)
-
-  ● When we invoke the GET / endpoint › Should return the index page with 8 restaurants
-
-    connect ECONNREFUSED 127.0.0.1:443
-
-
-
   console.log
     AWS credential loaded
 
-      at init (tests/steps/init.js:22:11)
+      at log (tests/steps/init.js:22:11)
 
   console.log
-    loading restaurants from https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/dev/restaurants...
+    loading restaurants from https://e3tjz6bf0b.execute-api.us-east-1.amazonaws.com/dev/restaurants...
 
-      at getRestaurants (functions/get-index.js:17:11)
+      at log (functions/get-index.js:17:11)
 
-Test Suites: 1 failed, 1 total
-Tests:       1 failed, 1 total
-Snapshots:   0 total
-Time:        0.431 s, estimated 1 s
-```
+  console.log
+    found 8 restaurants
 
-Notice that weird URL that's logged from the `get-index` function?
+      at log (functions/get-index.js:34:11)
 
-```
-  console.log functions/get-index.js:17
-    loading restaurants from https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/dev/restaurants...
-```
-
-That's literal value we gave to the `get-index` function's `restaurants_api` environment variable.
-
-```yml
-get-index:
-  handler: functions/get-index.handler
-  events:
-    - http:
-        path: /
-        method: get
-  environment:
-    restaurants_api: !Sub https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${sls:stage}/restaurants
-    cognito_user_pool_id: !Ref CognitoUserPool
-    cognito_client_id: !Ref WebCognitoUserPoolClient
-```
-
-Welcome to the real world, where your tools don't integrate perfectly with each other...
-
-![](/images/mod09-001.gif)
-
-</p></details>
-
-<details>
-<summary><b>Compromises, compromises...</b></summary><p>
-
-Ok, so the `serverless-export-env` plugin does 90% of the work and gives us the environment variables we need, but it falls down when it comes to the `!Sub` function.
-
-To solve that, we have to drop back down to using one of the CloudFormation pseudo functions that the plugin supports - `Fn::Join` (or the `!Join` shorthand).
-
-Why can't we have all the nice things?
-
-1. In the `serverless.yml`, find the `functions.get-index` block, and change the `restaurants_api` environment variable to the following:
-
-```yml
-restaurants_api:
-  Fn::Join:
-    - ""
-    - - https://
-      - !Ref ApiGatewayRestApi
-      - .execute-api.${aws:region}.amazonaws.com/${sls:stage}/restaurants
-```
-
-After your change, the `get-index` function should look like this:
-
-```yml
-get-index:
-  handler: functions/get-index.handler
-  events:
-    - http:
-        path: /
-        method: get
-  environment:
-    restaurants_api:
-      Fn::Join:
-        - ""
-        - - https://
-          - !Ref ApiGatewayRestApi
-          - .execute-api.${aws:region}.amazonaws.com/${sls:stage}/restaurants
-    cognito_user_pool_id: !Ref CognitoUserPool
-    cognito_client_id: !Ref WebCognitoUserPoolClient
-```
-
-*NOTE*: the `${aws:region}` above is a variable that returns the region used by the Serverless CLI. The `${aws:region}` variable is a shortcut for `${opt:region, self:provider.region, "us-east-1"}`, which means:
-  
-* use any `region` command line option if provided, e.g. when you run a command such as `npx sls deploy --region eu-west-1`
-
-* if no command line option is found, then use the `provider.region` value if provided.
-
-* otherwise, use `us-east-1`
-
-The `,` within the `${...}` syntax provide fallbacks. We'll see this syntax again in later exercises.
-
-2. Rerun the test
-
-`npm run test`
-
-and you should see the test is now finally passing!
-
-```
-PASS  tests/test_cases/get-index.tests.js
+ PASS  tests/test_cases/get-index.tests.js
   When we invoke the GET / endpoint
-    ✓ Should return the index page with 8 restaurants (517ms)
+    ✓ Should return the index page with 8 restaurants (1139 ms)
 
 Test Suites: 1 passed, 1 total
 Tests:       1 passed, 1 total
 Snapshots:   0 total
-Time:        1.162s, estimated 2s
+Time:        1.596 s
 ```
 
 Congratulation! You have just written and passed your first integration test!
 
-3. But notice all those `console.log` messages are clutering in the output. If you want to 'silence' them then you can change the `test` script in the `package.json` to:
+13. But notice all those `console.log` messages are clutering in the output. If you want to 'silence' them then you can change the `test` script in the `package.json` to:
 
 ```json
 "test": "npm run dotEnv && jest --silent"

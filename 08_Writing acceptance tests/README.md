@@ -60,12 +60,7 @@ So we just need to add the root URL to our API as an environment variable.
 
 ```yml
 environment:
-  rest_api_url:
-    Fn::Join:
-      - ""
-      - - https://
-        - !Ref ApiGatewayRestApi
-        - .execute-api.${aws:region}.amazonaws.com/${sls:stage}
+  rest_api_url: !Sub https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${sls:stage}
 ```
 
 Because this environment variable is added to the `provider` section as opposed to under a specific function's definition, it's added to all the functions in this project.
@@ -86,12 +81,7 @@ provider:
           Action: execute-api:Invoke
           Resource: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/${sls:stage}/GET/restaurants
   environment:
-    rest_api_url:
-      Fn::Join:
-        - ""
-        - - https://
-          - !Ref ApiGatewayRestApi
-          - .execute-api.${aws:region}.amazonaws.com/${sls:stage}
+    rest_api_url: !Sub https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${sls:stage}
 ```
 
 The `serverless-export-env` plugin would add this new environment variable to the `.env` file, which is then picked up and loaded into our tests by the `init` module.
@@ -523,12 +513,7 @@ get-index:
         path: /
         method: get
   environment:
-    restaurants_api:
-      Fn::Join:
-        - ""
-        - - https://
-          - !Ref ApiGatewayRestApi
-          - .execute-api.${aws:region}.amazonaws.com/${sls:stage}/restaurants
+    restaurants_api: !Sub https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${sls:stage}/restaurants
     cognito_user_pool_id: !Ref CognitoUserPool
     cognito_client_id: !Ref WebCognitoUserPoolClient
     cognito_server_client_id: !Ref ServerCognitoUserPoolClient

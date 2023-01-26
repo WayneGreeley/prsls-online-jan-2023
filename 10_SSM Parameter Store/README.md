@@ -108,6 +108,12 @@ and also Middy's SSM middleware:
 
 `npm install --save @middy/ssm`
 
+With v4.x of the SSM middleware, you also need to install the AWS SDK v3 SSM client separately. At the time of writing, the middleware doc says you should install this as a dev dependency, but that's incorrect. The Serverless framework automatically removes dev dependencies during packaging, so at runtime the SSM middleware would err because it can't find the AWS SDK's SSM client.
+
+So, instead, we would need to install the SSM client as a production dependency.
+
+`npm install --save @aws-sdk/client-ssm`
+
 2. To load the parameters we created in the last step, we need to know the `service` and `stage` names at runtime.
 
 These are perfect examples of static values that can be passed in via environment variables. So let's do that.
@@ -139,12 +145,7 @@ provider:
           Action: execute-api:Invoke
           Resource: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/${sls:stage}/GET/restaurants
   environment:
-    rest_api_url:
-      Fn::Join:
-        - ""
-        - - https://
-          - !Ref ApiGatewayRestApi
-          - .execute-api.${aws:region}.amazonaws.com/${sls:stage}
+    rest_api_url: !Sub https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${sls:stage}
     serviceName: ${self:service}
     stage: ${sls:stage}
 ```

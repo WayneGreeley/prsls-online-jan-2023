@@ -211,36 +211,17 @@ Click `Save Changes`
 
 and see that the `search-restaurants` test is now failing.
 
-```
- FAIL  tests/test_cases/search-restaurants.tests.js
-  ● Console
-
-    console.info tests/steps/when.js:40
-      invoking via HTTP POST https://4q8sbvheq2.execute-api.us-east-1.amazonaws.com/dev/restaurant
-s/search
-
-  ● Given an authenticated user › When we invoke the POST /restaurants/search endpoint with theme 
-'cartoon' › Should return an array of 4 restaurants
-
-    Request failed with status code 502
-
-      at createError (node_modules/axios/lib/core/createError.js:16:15)
-      at settle (node_modules/axios/lib/core/settle.js:17:12)
-      at IncomingMessage.handleStreamEnd (node_modules/axios/lib/adapters/http.js:236:11)
-
-Test Suites: 1 failed, 2 passed, 3 total
-Tests:       1 failed, 2 passed, 3 total
-Snapshots:   0 total
-Time:        3.768s, estimated 5s
-```
-
 10. Check the logs for this function
 
 `npx sls logs -f search-restaurants`
 
-and see the `AccessDeniedException`
+and see there's an error, but the middy SSM middleware is not showing you what the actual error is unfortunately...
 
-![](/images/mod13-008.png)
+```
+2023-01-26 01:53:08.596 ERROR   Invoke Error    {"errorType":"Error","errorMessage":"Failed to resolve internal values","stack":["Error: Failed to resolve internal values","    at getInternal (/var/task/node_modules/@middy/util/index.cjs:88:15)","    at async ssmMiddlewareBefore (/var/task/node_modules/@middy/ssm/index.cjs:135:26)","    at async runMiddlewares (/var/task/node_modules/@middy/core/index.cjs:127:21)","    at async runRequest (/var/task/node_modules/@middy/core/index.cjs:87:9)"]}
+```
+
+Under the hood, this was an `AccessDeniedException` because our function doesn't have the permission to use the KMS key.
 
 That's good. Now, only those who was access to the KMS key would be able to access the secret. It's another layer of protection.
 
@@ -257,7 +238,7 @@ Since we don't have another project that manages these shared resources in the r
 
 1. Go to the `Parameter Store` console in `Systems Manager`.
 
-2. Create a new `String` parameter called `/dev/kmsArn`, and put the ARN of the KMS key (you can find this in the `KMS` console if you navigate to the key you created earlier) as its value.
+2. Create a new `String` parameter called `/{service-name}/{stage}/kmsArn`, and put the ARN of the KMS key (you can find this in the `KMS` console if you navigate to the key you created earlier) as its value.
 
 ![](/images/mod13-009.png)
 
@@ -268,7 +249,7 @@ Since we don't have another project that manages these shared resources in the r
 ```yml
 - Effect: Allow
   Action: kms:Decrypt
-  Resource: ${ssm:/${sls:stage}/kmsArn}
+  Resource: ${ssm:/{self:service}/${sls:stage}/kmsArn}
 ```
 
 This special syntax `${ssm:...}` is how we can reference parameters in SSM directly in our `serverless.yml`. It's useful for referencing things like this, but again, since the SSM parameter values are fetched at deployment time and baked into the generated CloudFormation template, you shouldn't load any secrets this way.

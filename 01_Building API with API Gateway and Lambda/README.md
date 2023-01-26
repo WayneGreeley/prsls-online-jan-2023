@@ -47,7 +47,7 @@ custom:
 
 provider:
   name: aws
-  runtime: nodejs14.x
+  runtime: nodejs16.x
 
 functions:
   get-index:
@@ -525,7 +525,7 @@ dynamodb.batchWrite(req).promise()
 ```yml
 provider:
   name: aws
-  runtime: nodejs14.x
+  runtime: nodejs16.x
 
   iam:
     role:
